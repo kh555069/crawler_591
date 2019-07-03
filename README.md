@@ -3,9 +3,12 @@ using python-3.5.2
 
 1. `pip install -r package.txt`
 
-2. replace token in run.py
+2. In run.py, there are five parameters `lat`, `lng`, `dist` , `price`, `n_items`. you can change the default value of those parameters.
+   You can chose the coordinates of a point (lat, lng) in Google Map
 
-3. `python run.py`
+3. replace token in run.py
+
+4. `python run.py`
 
 ![image](https://github.com/kh555069/crawler_591/blob/master/image.png)
 
