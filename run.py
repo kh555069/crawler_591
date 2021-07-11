@@ -20,7 +20,7 @@ items=[
     },
 ]
 TOKEN='YOUR-TOKEN' # replace your token here
-item_list = get591(page=3)
+item_list = get591(page=1)
 for item in items:
     lat      = item['lat']
     lng      = item['lng']

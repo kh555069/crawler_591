@@ -7,7 +7,11 @@ import os
 from datetime import datetime, timedelta
 from pytz import timezone,utc
 
-headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'}
+headers={
+    'device': 'mobile',
+    'deviceid': '0',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+}
 
 def get591(page=2):
     output = []
@@ -26,28 +30,29 @@ def get591(page=2):
                     data = {}
                     RID = re.search(r'detail-(\d+).html', item.prettify()).group(1)
                     data['view_people'] = re.search(r'(\d+)人', item.select('.pattern')[0].text ).group(1)
-                    detail_url= "https://m.591.com.tw/api.php?module=iphone&action=houseRecordNew&id=R{}&version=1".format(RID)
+                    detail_url = "https://api.591.com.tw/tw/v1/house/rent/detail?id={}&isOnline=1".format(RID)
 
                     resp = requests.get(detail_url, headers=headers).json()
                     json_data = resp['data']
-                    data['url']   = 'https://rent.591.com.tw/rent-detail-{}.html'.format(json_data['id'].lstrip('R'))
+                    data['url']   = 'https://rent.591.com.tw/home/{}'.format(RID)
                     data['building_use']  = json_data['kind']
-                    data['latitude']      = json_data['lat']
-                    data['longitude']     = json_data['lng']
-                    data['owner']         = json_data['linkman']
-                    data['mobile']        = json_data['mobile'] 
-                    data['phone']         = json_data['telephone']
-                    data['sex']           = json_data['sex']
-                    data['sexID']         = json_data['sexID']
+                    data['latitude']      = json_data['address']['lat']
+                    data['longitude']     = json_data['address']['lng']
+                    data['owner']         = json_data['linkInfo']['name']
+                    data['mobile']        = json_data['linkInfo']['mobile'].replace('-','')
+                    data['phone']         = json_data['linkInfo']['phone']
+
+                    data['sex']           = "不限"
+                    data['sexID']         = "0"
+                    sex_info = [_ for _ in json_data['service']['notice'] if 'sex' in _.get('key')]
+                    if sex_info:
+                        data['sexID']     = sex_info[0]['key'].replace('sex_','')
+                        data['sex']       = sex_info[0]['name']
                     data['title']         = json_data['title']
                     data['price']         = json_data['price']
 
-                    lane                  = re.search(r'\d+巷', json_data['addr'])
-                    alley                 = re.search(r'\d+弄', json_data['addr'])
-                    lane_str              = lane.group() if lane else ""
-                    alley_str             = alley.group() if alley else ""
-                    data['address']       = json_data['region'] + json_data['section'] + json_data['street']+\
-                                                lane_str + alley_str + json_data['new_addr_number'] + json_data['new_floor']
-                    data['posttime']      = ( datetime.fromtimestamp( int(json_data['posttime']) )+timedelta(hours=8) ).strftime("%Y-%m-%d %H:%M:%S")
+                    data['address']       = json_data['address']['data']
+                    data['posttime']      = ( datetime.fromtimestamp( int(json_data['favData']['posttime']) ) ).strftime("%Y-%m-%d %H:%M:%S")
                     output.append(data)
+                    print(data)
     return output
